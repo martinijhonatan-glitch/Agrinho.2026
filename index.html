@@ -1,1 +1,80 @@
+import pandas as pd
+from datetime import datetime
 
+class SiloArmazenamento:
+    """Classe que gerencia o armazenamento de grãos da fazenda."""
+    def __init__(self, capacidade_max_ton: float):
+        self.capacidade_max = capacidade_max_ton
+        self.estoque = {}  # Formato: {'Milho': 120.5, 'Soja': 80.0}
+
+    def adicionar_safra(self, tipo_grao: str, quantidade: float):
+        """Adiciona uma quantidade de grãos ao silo."""
+        total_atual = sum(self.estoque.values())
+        if total_atual + quantidade > self.capacidade_max:
+            print(f"⚠️ Erro: Capacidade máxima do silo excedida! Espaço disponível: {self.capacidade_max - total_atual}t")
+            return
+        
+        tipo_grao = tipo_grao.capitalize()
+        self.estoque[tipo_grao] = self.estoque.get(tipo_grao, 0.0) + quantidade
+        print(f"✅ {quantidade}t de {tipo_grao} adicionadas com sucesso.")
+
+    def registrar_venda(self, tipo_grao: str, quantidade: float, preco_por_ton: float) -> dict:
+        """Registra a venda de grãos e calcula o faturamento."""
+        tipo_grao = tipo_grao.capitalize()
+        if tipo_grao not in self.estoque or self.estoque[tipo_grao] < quantidade:
+            print(f"❌ Venda cancelada: Estoque insuficiente de {tipo_grao}.")
+            return None
+        
+        self.estoque[tipo_grao] -= quantity = quantidade
+        faturamento = quantidade * preco_por_ton
+        
+        print(f"💰 Venda realizada: {quantidade}t de {tipo_grao} por R$ {faturamento:,.2f}")
+        return {
+            "Data": datetime.now().strftime("%Y-%m-%d"),
+            "Grão": tipo_grao,
+            "Quantidade (t)": quantidade,
+            "Preço/t (R$)": preco_por_ton,
+            "Faturamento Total (R$)": faturamento
+        }
+
+    def exibir_relatorio(self):
+        """Mostra a situação atual dos silos."""
+        print("\n--- 📊 RELATÓRIO DE ESTOQUE ATUAL ---")
+        for grao, qtd in self.estoque.items():
+            print(f"🌾 {grao}: {qtd:.2f} toneladas")
+        espaco_livre = self.capacidade_max - sum(self.estoque.values())
+        print(f"Capacity Livre: {espaco_livre:.2f}t / Total: {self.capacidade_max}t")
+        print("-------------------------------------\n")
+
+
+# --- Execução de Exemplo ---
+if __name__ == "__main__":
+    # Inicializa o silo com capacidade de 500 toneladas
+    meu_silo = SiloArmazenamento(capacidade_max_ton=500.0)
+    
+    # Histórico de vendas para análise posterior (Simulação de Banco de Dados)
+    historico_vendas = []
+
+    # 1. Armazenando a colheita
+    print("--- 🚜 Entrada de Safra ---")
+    meu_silo.adicionar_safra("Soja", 150.0)
+    meu_silo.adicionar_safra("Milho", 200.0)
+    meu_silo.exibir_relatorio()
+
+    # 2. Realizando vendas (Baseado em preços fictícios de mercado por tonelada)
+    print("--- 📈 Operações de Mercado ---")
+    venda1 = meu_silo.registrar_venda("Soja", 50.0, preco_por_ton=2850.0)
+    venda2 = meu_silo.registrar_venda("Milho", 120.0, preco_por_ton=1150.0)
+    
+    if venda1: historico_vendas.append(venda1)
+    if venda2: historico_vendas.append(venda2)
+
+    meu_silo.exibir_relatorio()
+
+    # 3. Análise de Dados com Pandas (O que chama atenção no GitHub)
+    print("--- 🔬 Análise de Dados (Pandas Dataframe) ---")
+    df_vendas = pd.DataFrame(historico_vendas)
+    print(df_vendas)
+    
+    faturamento_total = df_vendas["Faturamento Total (R$)"].sum()
+    print(f"\n💵 Faturamento Total do Período: R$ {faturamento_total:,.2f}")
